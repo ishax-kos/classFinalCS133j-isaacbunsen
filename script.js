@@ -286,7 +286,7 @@
                 key = 32;
             }
             switch (key) {
-                case 32: case 13: { // key enter (Jump) is pressed
+                case 32: { // key enter (Jump) is pressed
                     if (this.on_ground() && delta == 1) {
                         this.jumpfall = -12.0;
                         this.fastfall = false;
@@ -851,14 +851,20 @@
     // Class to display text and change the map when the user clicks
     class Continue {
         constructor(text,map) {
-            function input(ev) {
-                change_map(map);
-                update_score(0);
-                canvas_element.removeEventListener("click", input);
-            }
-            canvas_element.addEventListener("click", input);
+            // function input(ev) {
+            
+            //     change_map(map);
+            //     update_score(0);
+            //     // canvas_element.removeEventListener("click", input);
+            // }
+            var self = this;
+            this.process = true;
+            canvas_element.addEventListener("click", function(ev) {self.input(ev, "mouse")}, true);
+            document.addEventListener("keydown",   function(ev) {if (!ev.repeat) self.input(ev, "key")}, true);
             this.text = text;
             this.life_time = 0;
+            this.nextMap = map;
+            this.buttonAccum;
         }
 
 
@@ -866,7 +872,24 @@
         update() {
             this.life_time++;
         }
-
+        
+        input(ev, type) {
+            
+            if ( this.process && (
+                type == "key" && (
+                    ev.keyCode == 13 || ev.keyCode == 32
+                ) || 
+                type == "mouse"
+                
+            )) {//
+                this.process = false;
+                change_map(this.nextMap);
+                update_score(0);
+                // var self = this;
+                // canvas_element.removeEventListener("click", self.input);
+                // document.removeEventListener("keyup", self.input); 
+            }
+        }
 
         // drawing code that is run every frame.
         doDraw() {
@@ -907,8 +930,8 @@
         actors.push( new BigText("Congratulations!", 200) );
         actors.push( new SubText("You have beaten the game.", 280) );
         actors.push( new SubText("Final Score: " + playerInstance.score + "    Play Time: " + get_time(), 330) );
-        // actors.push( new Continue("Click to play again!", map_title) );
-        modal_play_again.style.display = "block";
+        actors.push( new Continue("Click to play again!", map_title) );
+        // modal_play_again.style.display = "block";
         start_time = 0;
         last_score_tracker.innerText = score_tracker.innerText;
         score_tracker.innerText = 0;
@@ -921,8 +944,9 @@
         actors.push( new BigText("GAME OVER", 200, "#f00", "#f70") );
         actors.push( new SubText("Gurnok will regin again!", 270) );
         actors.push( new SubText("Final Score: " + playerInstance.score + "    Play Time: " + get_time(), 330) );
-        // actors.push( new Continue("Click to retry", map_title) );
-        modal_play_again.style.display = "block";
+        // actors.push( new Continue("Click to continue!", map_title) );
+        actors.push( new Continue("Click to retry", map_title) );
+        // modal_play_again.style.display = "block";
         start_time = 0;
         last_score_tracker.innerText = score_tracker.innerText;
         score_tracker.innerText = 0;
